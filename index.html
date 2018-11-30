@@ -68,227 +68,232 @@
 <div id='map'></div>
 <div id="positionText" style="margin: 10px"></div>
 
-<script src='config.js'></script>
+
 
 <script>
-    var map;
-    var ufos = [];
-    var ufoSpreading = 20;
-    var valueCollision = 0.0004;
-    var centerCoordinates = [0,0];
-    var count = 0;
-    var step = 0.00005;
-    var smileSide = 0;
-    var posText = document.getElementById("positionText");
-    var accessToken = 'pk.eyJ1IjoiZXZnZW4wOTciLCJhIjoiY2pvNzhhY2trMHQ0ZTNxcGFsYWt1bDcwbSJ9.jzkLA3kLYT7k62667orDog';
-    var mapboxStyle = 'mapbox://styles/evgen097/cjog0faf76gvk2snva4npe2jf';
+    window.onload = function() {
+        var map;
+        var ufos = [];
+        var ufoSpreading = 20;
+        var valueCollision = 0.0004;
+        var centerCoordinates = [0, 0];
+        var count = 0;
+        var step = 0.00005;
+        var smileSide = 0;
+        var posText = document.getElementById("positionText");
+        var accessToken = 'pk.eyJ1IjoiZXZnZW4wOTciLCJhIjoiY2pvNzhhY2trMHQ0ZTNxcGFsYWt1bDcwbSJ9.jzkLA3kLYT7k62667orDog';
+        var mapboxStyle = 'mapbox://styles/evgen097/cjog0faf76gvk2snva4npe2jf';
 
-    function createMap(x, y){
-        mapboxgl.accessToken = accessToken;
-        map = new mapboxgl.Map({
-            container: 'map',
-            style: mapboxStyle,
-            center: [x, y],
-            zoom: 17
-        });
-    }
-
-    function initMap() {
-        if (navigator.geolocation) {
-            // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
-            navigator.geolocation.getCurrentPosition(function(position) {
-                centerCoordinates[0] = position.coords.longitude;
-                centerCoordinates[1] = position.coords.latitude;
-                createMap(position.coords.longitude, position.coords.latitude)
+        function createMap(x, y) {
+            mapboxgl.accessToken = accessToken;
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: mapboxStyle,
+                center: [x, y],
+                zoom: 17
             });
-        } else {
-            // Если нет, выводим сообщение об ошибке
-            posText.innerHTML = "Этот браузер не может определять местоположение";
-            centerCoordinates[0] = 0;
-            centerCoordinates[1] = 0;
         }
-    };
 
-    // initMap();
-
-
-
-    var changeSmileSide = ()=> {
-        var el = document.querySelector('.em-confused');
-        if (smileSide === 0) {
-            document.querySelector('.em-confused').style.transform = "scale(-1, 1)";
-            smileSide = 1;
-        } else {
-            document.querySelector('.em-confused').style.transform = "scale(1, 1)";
-            smileSide = 0;
+        function initMap() {
+            if (navigator.geolocation) {
+                // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    centerCoordinates[0] = position.coords.longitude;
+                    centerCoordinates[1] = position.coords.latitude;
+                    createMap(position.coords.longitude, position.coords.latitude)
+                });
+            } else {
+                // Если нет, выводим сообщение об ошибке
+                posText.innerHTML = "Этот браузер не может определять местоположение";
+                centerCoordinates[0] = 0;
+                centerCoordinates[1] = 0;
+            }
         };
-    };
 
-    var removeEmoji = ()=> {
-        var emojis = Array.from(document.querySelectorAll('.marker'));
-        emojis.forEach( item => {
-            item.parentNode.removeChild(item)
-        } )
-    }
-
-    var geojsonGun = {
-        coordinates: [36.386859, 49.926677]
-    };
+        // initMap();
 
 
-    var moveMarkers = ()=>{
-        count++;
-        if(count < 50) step = 0.00005;
-        if(count > 50) step = -0.00005;
-        if(count === 100) count = 0;
-
-        ufos.features[0].geometry.coordinates[0] += step;
-        ufos.features[1].geometry.coordinates[0] += step;
-        ufos.features[2].geometry.coordinates[0] -= step;
-        ufos.features[3].geometry.coordinates[1] -= step;
-
-        ufos.features.forEach((marker)=> {
-            var el = document.createElement('div');
-            el.className = 'marker em em-alien';
-            new mapboxgl.Marker(el)
-                .setLngLat(marker.geometry.coordinates)
-                .addTo(map);
-        });
-    };
-
-
-    function checkCollision(gun, el) {
-        ufos.forEach( ufo =>{
-            if(  (Math.abs((gun.coordinates[0] - ufo.coordinates[0])) < valueCollision) &&
-                (Math.abs((gun.coordinates[1] - ufo.coordinates[1])) < (valueCollision/3))  ){
-                killUfo(ufo);
-
-                if(  (gun.coordinates[0] > ufo.coordinates[0])){
-                    el.classList.add('gunleft')
-                }else {
-                    el.classList.add('gunright')
-                }
+        var changeSmileSide = () => {
+            var el = document.querySelector('.em-confused');
+            if (smileSide === 0) {
+                document.querySelector('.em-confused').style.transform = "scale(-1, 1)";
+                smileSide = 1;
+            } else {
+                document.querySelector('.em-confused').style.transform = "scale(1, 1)";
+                smileSide = 0;
             }
-        })
-    }
+            ;
+        };
+
+        var removeEmoji = () => {
+            var emojis = Array.from(document.querySelectorAll('.marker'));
+            emojis.forEach(item => {
+                item.parentNode.removeChild(item)
+            })
+        }
+
+        var geojsonGun = {
+            coordinates: [36.386859, 49.926677]
+        };
 
 
-    var moveGun = ()=>{
-        if (navigator.geolocation) {
-            // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
-            navigator.geolocation.getCurrentPosition(function(position) {
-                geojsonGun.coordinates[0] = position.coords.longitude;
-                geojsonGun.coordinates[1] = position.coords.latitude;
+        var moveMarkers = () => {
+            count++;
+            if (count < 50) step = 0.00005;
+            if (count > 50) step = -0.00005;
+            if (count === 100) count = 0;
 
+            ufos.features[0].geometry.coordinates[0] += step;
+            ufos.features[1].geometry.coordinates[0] += step;
+            ufos.features[2].geometry.coordinates[0] -= step;
+            ufos.features[3].geometry.coordinates[1] -= step;
+
+            ufos.features.forEach((marker) => {
                 var el = document.createElement('div');
-                el.className = 'marker gun em em-confused';
-
-                if (smileSide === 0) {
-                    el.className = 'marker gun em em-confused';
-                    smileSide = 1;
-                } else {
-                    el.className = 'marker gun em em-face_with_raised_eyebrow';
-                    smileSide = 0;
-                };
-                checkCollision(geojsonGun, el)
-
+                el.className = 'marker em em-alien';
                 new mapboxgl.Marker(el)
-                    .setLngLat(geojsonGun.coordinates)
+                    .setLngLat(marker.geometry.coordinates)
                     .addTo(map);
-
-                // posText.innerHTML = 'X: ' + geojsonGun.coordinates[0] + "</br>" + 'Y: ' +  geojsonGun.coordinates[1];
-
             });
-        } else {
-            // Если нет, выводим сообщение об ошибке
-            posText.innerHTML = "Этот браузер не может определять местоположение";
+        };
+
+
+        function checkCollision(gun, el) {
+            ufos.forEach(ufo => {
+                if ((Math.abs((gun.coordinates[0] - ufo.coordinates[0])) < valueCollision) &&
+                    (Math.abs((gun.coordinates[1] - ufo.coordinates[1])) < (valueCollision / 3))) {
+                    killUfo(ufo);
+
+                    if ((gun.coordinates[0] > ufo.coordinates[0])) {
+                        el.classList.add('gunleft')
+                    } else {
+                        el.classList.add('gunright')
+                    }
+                }
+            })
         }
 
-    };
 
+        var moveGun = () => {
+            if (navigator.geolocation) {
+                // Если пользователь разрешил, определяем его местоположение и обрабатываем полученное значение с помощью функции ShowPosition
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    geojsonGun.coordinates[0] = position.coords.longitude;
+                    geojsonGun.coordinates[1] = position.coords.latitude;
 
-    function randomInteger(min, max) {
-        var rand = min + Math.random() * (max + 1 - min);
-        rand = Math.floor(rand);
-        return rand;
-    }
+                    var el = document.createElement('div');
+                    el.className = 'marker gun em em-confused';
 
-    function createUfoCoord() {
-        // 36.388044799999996, 49.931878399999995
-        var x = (((centerCoordinates[0].toFixed(4)))*10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000;
-        var y = (((centerCoordinates[1].toFixed(4)))*10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000
-        // console.log(x, y)
-        return [x, y];
-    }
+                    if (smileSide === 0) {
+                        el.className = 'marker gun em em-confused';
+                        smileSide = 1;
+                    } else {
+                        el.className = 'marker gun em em-face_with_raised_eyebrow';
+                        smileSide = 0;
+                    }
+                    ;
+                    checkCollision(geojsonGun, el)
 
+                    console.log('mapboxgl')
+                    new mapboxgl.Marker(el)
+                        .setLngLat(geojsonGun.coordinates)
+                        .addTo(map);
 
-    function createUfos() {
-        // {id: 1, coordinates: [36.3889, 49.9321] },
-        // {id: 2, coordinates: [36.3875, 49.9307] },
-        for (var i=1; i < 20; i++){
-            ufos.push({id: i, coordinates: createUfoCoord() })
-        }
-    }
+                    // posText.innerHTML = 'X: ' + geojsonGun.coordinates[0] + "</br>" + 'Y: ' +  geojsonGun.coordinates[1];
 
-    function moveUfos(){
-
-        count++;
-        if(count < 50) step = 0.00005;
-        if(count > 50) step = -0.00005;
-        if(count === 100) count = 0;
-        ufos.forEach( (item, index) =>{
-
-            if (index < ufos.length/4){
-                item.coordinates[0] += step;
-            }else if( index < ufos.length/2 ){
-                item.coordinates[0] -= step;
-            }else if( index < (ufos.length - ufos.length/4) ){
-                item.coordinates[1] += step;
-            }else {
-                item.coordinates[1] -= step;
+                });
+            } else {
+                // Если нет, выводим сообщение об ошибке
+                posText.innerHTML = "Этот браузер не может определять местоположение";
             }
-        })
 
-        ufos.forEach( ufo =>{
-            var el = document.createElement('div');
-            el.className = 'marker em em-alien';
-            el.dataset.id = ufo.id;
-            new mapboxgl.Marker(el)
-                .setLngLat(ufo.coordinates)
-                .addTo(map);
-        } )
+        };
+
+
+        function randomInteger(min, max) {
+            var rand = min + Math.random() * (max + 1 - min);
+            rand = Math.floor(rand);
+            return rand;
+        }
+
+        function createUfoCoord() {
+            // 36.388044799999996, 49.931878399999995
+            var x = (((centerCoordinates[0].toFixed(4))) * 10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000;
+            var y = (((centerCoordinates[1].toFixed(4))) * 10000 + randomInteger(-ufoSpreading, ufoSpreading)) / 10000
+            // console.log(x, y)
+            return [x, y];
+        }
+
+
+        function createUfos() {
+            // {id: 1, coordinates: [36.3889, 49.9321] },
+            // {id: 2, coordinates: [36.3875, 49.9307] },
+            for (var i = 1; i < 20; i++) {
+                ufos.push({id: i, coordinates: createUfoCoord()})
+            }
+        }
+
+        function moveUfos() {
+
+            count++;
+            if (count < 50) step = 0.00005;
+            if (count > 50) step = -0.00005;
+            if (count === 100) count = 0;
+
+
+            ufos.forEach((item, index) => {
+
+                if (index < ufos.length / 4) {
+                    item.coordinates[0] += step;
+                } else if (index < ufos.length / 2) {
+                    item.coordinates[0] -= step;
+                } else if (index < (ufos.length - ufos.length / 4)) {
+                    item.coordinates[1] += step;
+                } else {
+                    item.coordinates[1] -= step;
+                }
+            })
+
+            ufos.forEach(ufo => {
+                var el = document.createElement('div');
+                el.className = 'marker em em-alien';
+                el.dataset.id = ufo.id;
+                // new mapboxgl.Marker(el)
+                // .setLngLat(ufo.coordinates)
+                // .addTo(map);
+            })
+        }
+
+        function addUfo(id) {
+            ufos.push({id: id, coordinates: createUfoCoord()})
+        }
+
+        function killUfo(ufo) {
+            var ufoDIV = document.querySelector(`[data-id="${ufo.id}"]`);
+            ufoDIV.style.width = '0px';
+            ufoDIV.style.height = '0px';
+            ufoDIV.classList.add('explode');
+            ufos = ufos.filter(elem => {
+                return elem.id != ufo.id;
+            });
+            addUfo(ufo.id)
+            // console.log(ufos)
+        }
+
+        initMap();
+        setTimeout(() => {
+            createUfos()
+        }, 900)
+
+        setInterval(() => {
+            // addUfo()
+            removeEmoji();
+            moveUfos();
+            // moveGun();
+            // killUfo(ufos[0])
+            // changeSmileSide();
+        }, 2000)
     }
-
-    function addUfo(id) {
-        ufos.push({id: id, coordinates: createUfoCoord() })
-    }
-
-    function killUfo(ufo){
-        var ufoDIV = document.querySelector(`[data-id="${ufo.id}"]`);
-        ufoDIV.style.width = '0px';
-        ufoDIV.style.height = '0px';
-        ufoDIV.classList.add('explode');
-        ufos = ufos.filter( elem => {
-            return elem.id != ufo.id;
-        });
-        addUfo(ufo.id)
-        // console.log(ufos)
-    }
-
-    initMap();
-    setTimeout( ()=>{
-        createUfos()
-    }, 900 )
-
-    setInterval( ()=>{
-        // addUfo()
-        removeEmoji();
-        moveUfos();
-        moveGun();
-        // killUfo(ufos[0])
-        // changeSmileSide();
-    }, 1000 )
-
 
 </script>
 
